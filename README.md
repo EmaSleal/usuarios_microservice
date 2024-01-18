@@ -16,7 +16,7 @@
 * Run the userservice
 * Run the authenticationservice
 
-.[!IMPORTANT].
+.[!IMPORTANT]
 YO HAVE TO RUN THE MODULES IN THE ORDER THAT IS DESCRIBED ABOVE
 
 ## How to test the application
