@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -53,31 +54,42 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserDto authenticate(UserAuth request) {
+    public Optional<UserDto> authenticate(UserAuth request) {
+        UserDto UserDto;
+        try {
+             UserDto = restTemplate.postForObject("http://user-service/user/authenticate", request, UserDto.class);
+            var access = jwtService.generateToken(UserDto.id().toString(), UserDto.role().toString(), "AUTHORIZATION");
+            var refresh = jwtService.generateToken(UserDto.id().toString(), UserDto.role().toString(), "REFRESH");
+            var token = AuthenticationResponse.builder()
+                    .token(access)
+                    .refreshToken(refresh)
+                    .build();
+            return Optional.of(new UserDto(UserDto.id(), UserDto.userName(), UserDto.email(), UserDto.role(), UserDto.enabled(), UserDto.accountNonExpired(), UserDto.credentialsNonExpired(), UserDto.accountNonLocked(), token));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
 
-        var UserDto = restTemplate.postForObject("http://user-service/user/authenticate", request, UserDto.class);
 
-
-        var access = jwtService.generateToken(UserDto.id().toString(), UserDto.role().toString(), "AUTHORIZATION");
-        var refresh = jwtService.generateToken(UserDto.id().toString(), UserDto.role().toString(), "REFRESH");
-        var token = AuthenticationResponse.builder()
-                .token(access)
-                .refreshToken(refresh)
-                .build();
-        return new UserDto(UserDto.id(), UserDto.userName(), UserDto.email(), UserDto.role(), UserDto.enabled(), UserDto.accountNonExpired(), UserDto.credentialsNonExpired(), UserDto.accountNonLocked(), token);
     }
 
     @Override
     public Optional<AuthenticationResponse> TokenforgotPassword(String email) {
         //var user = authenticationRepository.findByEmail(email).orElse(null);
-        var UserDto = restTemplate.getForObject("http://user-service/user/findByEmail/"+email, UserDto.class);
 
-        if (UserDto != null) {
+        try {
+            var UserDto = restTemplate.getForObject("http://user-service/user/findByEmail/"+email, UserDto.class);
+            assert UserDto != null;
+            var token = jwtService.generateTokenFP(UserDto.id().toString(), "AUTHORIZATION");
+            log.info("token: {}", token);
             return Optional.of(AuthenticationResponse.builder()
-                    .token(jwtService.generateTokenFP(UserDto.id().toString(), "AUTHORIZATION"))
+                    .token(token)
                     .build());
+
+        } catch (Exception e) {
+            return Optional.empty();
         }
-        return Optional.empty();
+
+
     }
 
     @Override

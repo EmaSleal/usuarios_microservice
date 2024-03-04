@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface AuthenticationService {
     UserDto register(User request);
 
-    UserDto authenticate(UserAuth request);
+    Optional<UserDto> authenticate(UserAuth request);
 
     Optional<AuthenticationResponse> TokenforgotPassword(String email);
 

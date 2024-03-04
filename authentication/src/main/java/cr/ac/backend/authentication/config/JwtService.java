@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class JwtService {
 
 
@@ -106,17 +108,24 @@ public class JwtService {
     }*/
 
     public String generateTokenFP(String userId, String tokenType) {
+        log.info("claims: {}", userId);
         Map<String,String> claims = Map.of(
                 "userId",userId,
-                "tokenType", tokenType
+                "tokenType", tokenType,
+                "rol", "PASSWORD_RESET"
         );
-        return buidTokenFP(claims);
+        log.info("claims: {}", claims);
+        var token = buidTokenFP(claims);
+        log.info("token: {}", token);
+        return token;
     }
 
     public String buidTokenFP(
             Map<String, String> extraClaims
     ) {
-        extraClaims.put("rol", "PASSWORD_RESET");
+        log.info("extraClaims: {}", extraClaims);
+
+        log.info("extraClaims: {}", extraClaims);
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
@@ -124,7 +133,7 @@ public class JwtService {
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 // 24 hours
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
-                .signWith( key)
+                .signWith(key)
                 .compact();
     }
 

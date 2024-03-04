@@ -7,6 +7,7 @@ import cr.ac.backend.authentication.model.UserDto;
 import cr.ac.backend.authentication.service.AuthenticationService;
 import cr.ac.backend.authentication.service.impl.EmailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
@@ -18,7 +19,7 @@ import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
-
+@Slf4j
 @RequestMapping("forgot-password")
 public class ForgotPasswordController {
 
@@ -36,8 +37,9 @@ public class ForgotPasswordController {
     }
 
     @PostMapping
-    public ResponseEntity<Date> forgotPassword(@RequestBody UserDto request) {
-        Optional<AuthenticationResponse> response = service.TokenforgotPassword(request.email());
+    public ResponseEntity<Date> forgotPassword(@RequestBody UserAuth request) {
+        var response = service.TokenforgotPassword(request.email());
+        log.info("UserDto: {}", response);
         if (response.isPresent()) {
             var fecha = emailService.sendForgotPasswordEmail(request.email(), response.get().getToken());
             return ResponseEntity.ok(fecha);

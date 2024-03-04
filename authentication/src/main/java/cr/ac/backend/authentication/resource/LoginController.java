@@ -24,7 +24,8 @@ public class LoginController {
     public ResponseEntity<UserDto> authenticate(
             @RequestBody UserAuth request
     ) {
-        return ResponseEntity.ok(service.authenticate(request));
+        var user = service.authenticate(request);
+        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 }
